@@ -257,7 +257,7 @@ class PrintingLabelZpl2(models.Model):
             label_contents = label._generate_zpl2_data(
                 record, page_count=page_count, **extra)
             printer.print_document(
-                report=None, content=label_contents, doc_format='raw')
+                report=None, content=label_contents, format='raw')
 
         return True
 
