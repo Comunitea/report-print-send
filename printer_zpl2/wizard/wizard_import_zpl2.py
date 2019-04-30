@@ -9,7 +9,7 @@ import io
 
 
 from PIL import Image, ImageOps
-from odoo import fields, models, _
+from openerp import fields, models, _, api
 
 _logger = logging.getLogger(__name__)
 
@@ -375,6 +375,7 @@ class WizardImportZPl2(models.TransientModel):
             return max(sequences) + 1
         return 0
 
+    @api.multi
     def import_zpl2(self):
         Zpl2Component = self.env['printing.label.zpl2.component']
 
@@ -418,6 +419,7 @@ class WizardImportZPl2(models.TransientModel):
                 })
                 Zpl2Component.create(vals)
 
+    @api.multi
     def _update_vals(self, vals):
         if 'orientation' in vals.keys() and vals['orientation'] == '':
             vals['orientation'] = 'N'

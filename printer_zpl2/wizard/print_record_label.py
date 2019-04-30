@@ -1,7 +1,7 @@
 # Copyright (C) 2016 SYLEAM (<http://www.syleam.fr>)
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
-from odoo import models, api, fields
+from openerp import models, api, fields
 
 
 class PrintRecordLabel(models.TransientModel):
@@ -37,6 +37,7 @@ class PrintRecordLabel(models.TransientModel):
 
         return values
 
+    @api.multi
     def print_label(self):
         """ Prints a label per selected record """
         record_model = self.env.context['active_model']

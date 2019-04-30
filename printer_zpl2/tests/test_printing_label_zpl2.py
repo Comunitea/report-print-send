@@ -4,8 +4,8 @@
 import mock
 import logging
 
-from odoo import exceptions
-from odoo.tests.common import TransactionCase
+from openerp import exceptions
+from openerp.tests.common import TransactionCase
 
 _logger = logging.getLogger(__name__)
 
@@ -14,7 +14,7 @@ try:
 except ImportError:
     _logger.debug('Cannot `import zpl2`.')
 
-model = 'odoo.addons.base_report_to_printer.models.printing_server'
+model = 'openerp.addons.base_report_to_printer.models.printing_server'
 
 
 class TestPrintingLabelZpl2(TransactionCase):

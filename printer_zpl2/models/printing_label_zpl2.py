@@ -8,8 +8,8 @@ import io
 import logging
 import requests
 from PIL import Image, ImageOps
-from odoo import api, exceptions, fields, models, _
-from odoo.tools.safe_eval import safe_eval
+from openerp import api, exceptions, fields, models, _
+from openerp.tools.safe_eval import safe_eval
 
 _logger = logging.getLogger(__name__)
 
@@ -66,6 +66,7 @@ class PrintingLabelZpl2(models.Model):
     labelary_width = fields.Float(string='Width in mm', default=140)
     labelary_height = fields.Float(string='Height in mm', default=70)
 
+    @api.multi
     def _generate_zpl2_components_data(
             self, label_data, record, page_number=1, page_count=1,
             label_offset_x=0, label_offset_y=0, **extra):
@@ -218,6 +219,7 @@ class PrintingLabelZpl2(models.Model):
                     component.origin_y + offset_y,
                     component.component_type, barcode_arguments, data)
 
+    @api.multi
     def _generate_zpl2_data(self, record, page_count=1, **extra):
         self.ensure_one()
         label_data = zpl2.Zpl2()
@@ -243,6 +245,7 @@ class PrintingLabelZpl2(models.Model):
 
         return label_data.output()
 
+    @api.multi
     def print_label(self, printer, record, page_count=1, **extra):
         for label in self:
             if record._name != label.model_id.model:
@@ -258,6 +261,7 @@ class PrintingLabelZpl2(models.Model):
 
         return True
 
+    @api.multi
     def create_action(self):
         for label in self.filtered(lambda record: not record.action_window_id):
             label.action_window_id = self.env['ir.actions.act_window'].create({
@@ -272,9 +276,11 @@ class PrintingLabelZpl2(models.Model):
 
         return True
 
+    @api.multi
     def unlink_action(self):
         self.mapped('action_window_id').unlink()
 
+    @api.multi
     def import_zpl2(self):
         self.ensure_one()
         return {
@@ -286,6 +292,7 @@ class PrintingLabelZpl2(models.Model):
             'context': {'default_label_id': self.id},
         }
 
+    @api.multi
     def _get_record(self):
         self.ensure_one()
         Obj = self.env[self.model_id.model]
@@ -296,6 +303,7 @@ class PrintingLabelZpl2(models.Model):
 
         return record
 
+    @api.multi
     def print_test_label(self):
         for label in self:
             if label.test_print_mode and label.record_id and label.printer_id:

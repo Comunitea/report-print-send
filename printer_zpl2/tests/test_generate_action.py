@@ -1,9 +1,9 @@
 # Copyright (C) 2018 Florent Mirieu (<https://github.com/fmdl>)
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
-from odoo.tests.common import TransactionCase
+from openerp.tests.common import TransactionCase
 
-model = 'odoo.addons.base_report_to_printer.models.printing_server'
+model = 'openerp.addons.base_report_to_printer.models.printing_server'
 
 
 class TestWizardPrintRecordLabel(TransactionCase):

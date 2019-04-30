@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
-<odoo>
+<openerp>
+    <data>
     <record id="view_wizard_import_zpl2_form" model="ir.ui.view">
         <field name="name">wizard.import.zpl2.form</field>
         <field name="model">wizard.import.zpl2</field>
@@ -21,4 +22,5 @@
             </form>
         </field>
     </record>
-</odoo>
+    </data>
+</openerp>
