@@ -16,6 +16,7 @@ DEFAULT_PYTHON_CODE = """# Python One-Liners
 #  - page_number: Current Page
 #  - page_count: Total Page
 #  - time, datetime: Python libraries
+#  - context: Enviroment context
 #  Exemple : object.name
 
 ""

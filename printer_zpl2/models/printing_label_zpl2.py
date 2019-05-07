@@ -49,6 +49,9 @@ class PrintingLabelZpl2(models.Model):
         default=True)
     action_window_id = fields.Many2one(
         comodel_name='ir.actions.act_window', string='Action', readonly=True)
+    value_id = fields.Many2one(
+        comodel_name='ir.values', string='Sidebar Button', readonly=True,
+        copy=False, oldname='ref_ir_value')
     test_print_mode = fields.Boolean(string='Mode Print')
     test_labelary_mode = fields.Boolean(string='Mode Labelary')
     record_id = fields.Integer(string='Record ID', default=1)
@@ -83,9 +86,9 @@ class PrintingLabelZpl2(models.Model):
                 'page_count': str(page_count),
                 'time': time,
                 'datetime': datetime,
+                'context': self.env.context
             })
             data = safe_eval(component.data, eval_args) or ''
-
             # Generate a list of elements if the component is repeatable
             for idx in range(
                     component.repeat_offset,
@@ -273,12 +276,20 @@ class PrintingLabelZpl2(models.Model):
                 'target': 'new',
                 'binding_type': 'action',
             })
+            label.value_id = self.env['ir.values'].create({
+                'name': _('Print Label'),
+                'model': label.model_id.model,
+                'key2': 'client_action_multi',
+                'value': (
+                    "ir.actions.act_window,%s" % label.action_window_id.id),
+            })
 
         return True
 
     @api.multi
     def unlink_action(self):
         self.mapped('action_window_id').unlink()
+        self.mapped('value_id').unlink()
 
     @api.multi
     def import_zpl2(self):
