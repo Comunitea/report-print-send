@@ -226,9 +226,14 @@ class PrintingLabelZpl2(models.Model):
                         zpl2.ARG_BLOCK_LEFT_MARGIN,
                     ]
                 }
-                label_data.font_data(
-                    component_offset_x, component_offset_y, barcode_arguments, data
-                )
+                if component.coords_type == "FO":
+                    label_data.font_data(
+                        component_offset_x, component_offset_y, barcode_arguments, data
+                    )
+                else:
+                    label_data.font_relative_data(
+                        component_offset_x, component_offset_y, barcode_arguments, data
+                    )
             elif component.component_type == "zpl2_raw":
                 label_data._write_command(data)
             elif component.component_type == "rectangle":
@@ -295,6 +300,17 @@ class PrintingLabelZpl2(models.Model):
                         zpl2.ARG_COLOR: component.color,
                     },
                 )
+            elif component.component_type == "ellipse":
+                label_data.graphic_ellipse(
+                    component_offset_x,
+                    component_offset_y,
+                    {
+                        zpl2.ARG_WIDTH: component.width,
+                        zpl2.ARG_HEIGHT: component.height,
+                        zpl2.ARG_THICKNESS: component.thickness,
+                        zpl2.ARG_COLOR: component.color,
+                    },
+                )
             elif component.component_type == "sublabel":
                 component_offset_x += component.sublabel_id.origin_x
                 component_offset_y += component.sublabel_id.origin_y
@@ -329,13 +345,22 @@ class PrintingLabelZpl2(models.Model):
                         zpl2.ARG_MASK_VALUE,
                     ]
                 }
-                label_data.barcode_data(
-                    component.origin_x + offset_x,
-                    component.origin_y + offset_y,
-                    component.component_type,
-                    barcode_arguments,
-                    data,
-                )
+                if component.coords_type == "FO":
+                    label_data.barcode_data(
+                        component.origin_x + offset_x,
+                        component.origin_y + offset_y,
+                        component.component_type,
+                        barcode_arguments,
+                        data,
+                    )
+                else:
+                    label_data.barcode_relative_data(
+                        component.origin_x + offset_x,
+                        component.origin_y + offset_y,
+                        component.component_type,
+                        barcode_arguments,
+                        data,
+                    )
 
     def _generate_zpl2_data(self, record, page_count=1, **extra):
         self.ensure_one()

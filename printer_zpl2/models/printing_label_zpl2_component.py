@@ -47,12 +47,16 @@ class PrintingLabelZpl2Component(models.Model):
         default=10,
         help="Origin point of the component in the label, Y coordinate.",
     )
+    coords_type = fields.Selection(
+        [("FO", "FO (Origin)"), ("FT", "FT (Relative)")], default="FO", required=True
+    )
     component_type = fields.Selection(
         selection=[
             ("text", "Text"),
             ("rectangle", "Rectangle / Line"),
             ("diagonal", "Diagonal Line"),
             ("circle", "Circle"),
+            ("ellipse", "Ellipse"),
             ("graphic", "Graphic"),
             (str(zpl2.BARCODE_CODE_11), "Code 11"),
             (str(zpl2.BARCODE_INTERLEAVED_2_OF_5), "Interleaved 2 of 5"),

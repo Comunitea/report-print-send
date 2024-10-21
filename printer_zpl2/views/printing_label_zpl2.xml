@@ -104,6 +104,7 @@
                                         string="+"
                                         icon="fa-plus-square"
                                     />
+                                    <field name="coords_type" />
                                 </tree>
                                 <form string="Label Component">
                                     <group>
@@ -128,6 +129,7 @@
                                         >
                                             <field name="origin_x" />
                                             <field name="origin_y" />
+                                            <field name="coords_type" />
                                         </group>
                                         <group>
                                             <field

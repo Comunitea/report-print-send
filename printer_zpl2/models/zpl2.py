@@ -179,6 +179,12 @@ class Zpl2(object):
         """
         return "^FO%d,%d" % (right, down)
 
+    def _field_typeset(self, rightT, downR):
+        """Define the top left corner of the data, from the top left corner of
+        the label
+        """
+        return "^FT%d,%d" % (rightT, downR)
+
     def _font_format(self, font_format):
         """Send the commands which define the font to use for the current data"""
         arguments = [ARG_FONT, ARG_HEIGHT, ARG_WIDTH]
@@ -382,11 +388,38 @@ class Zpl2(object):
         )
         self._write_command(command)
 
+    def font_relative_data(self, right, down, field_format, data):
+        """Add a full text in the buffer, with needed formatting commands"""
+        reverse = ""
+        if field_format.get(ARG_REVERSE_PRINT, False):
+            reverse = self._field_reverse_print()
+        block = ""
+        if field_format.get(ARG_IN_BLOCK, False):
+            block = self._field_block(field_format)
+        command = "{origin}{font_format}{reverse}{block}{data}".format(
+            origin=self._field_typeset(right, down),
+            font_format=self._font_format(field_format),
+            reverse=reverse,
+            block=block,
+            data=self._field_data(data),
+        )
+        self._write_command(command)
+
     def barcode_data(self, right, down, barcodeType, barcode_format, data):
         """Add a full barcode in the buffer, with needed formatting commands"""
         command = "{default}{origin}{barcode_format}{data}".format(
             default=self._barcode_field_default(barcode_format),
             origin=self._field_origin(right, down),
+            barcode_format=self._barcode_format(barcodeType, barcode_format),
+            data=self._field_data(data),
+        )
+        self._write_command(command)
+
+    def barcode_relative_data(self, right, down, barcodeType, barcode_format, data):
+        """Add a full barcode in the buffer, with needed formatting commands"""
+        command = "{default}{origin}{barcode_format}{data}".format(
+            default=self._barcode_field_default(barcode_format),
+            origin=self._field_typeset(right, down),
             barcode_format=self._barcode_format(barcodeType, barcode_format),
             data=self._field_data(data),
         )
@@ -478,6 +511,22 @@ class Zpl2(object):
         command = "{origin}{data}{stop}".format(
             origin=self._field_origin(right, down),
             data="^GC" + self._generate_arguments(arguments, graphic_format),
+            stop=self._field_data_stop(),
+        )
+        self._write_command(command)
+
+    def graphic_ellipse(self, right, down, graphic_format):
+        """Send the commands to draw a ellipse"""
+        arguments = [ARG_WIDTH, ARG_HEIGHT, ARG_THICKNESS, ARG_COLOR]
+        # Check that the thickness value fits in the allowed values
+        if graphic_format.get(ARG_THICKNESS) is not None:
+            graphic_format[ARG_THICKNESS] = self._enforce(
+                graphic_format[ARG_THICKNESS], minimum=2, maximum=4095
+            )
+        # Generate the ZPL II command
+        command = "{origin}{data}{stop}".format(
+            origin=self._field_origin(right, down),
+            data="^GE" + self._generate_arguments(arguments, graphic_format),
             stop=self._field_data_stop(),
         )
         self._write_command(command)

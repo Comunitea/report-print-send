@@ -31,6 +31,15 @@ def _field_origin(data):
     return {}
 
 
+def _field_typeset(data):
+    if data[:2] == "FT":
+        position = data[2:]
+        vals = _compute_arg(position, ["origin_x", "origin_y"])
+        vals["coords_type"] = "FT"
+        return vals
+    return {}
+
+
 def _font_format(data):
     if data[:1] == "A":
         data = data.split(",")
@@ -261,6 +270,15 @@ def _graphic_circle(data):
     return {}
 
 
+def _graphic_ellipse(data):
+    if data[:2] == "GE":
+        vals = {"component_type": "ellipse"}
+        args = [zpl2.ARG_WIDTH, zpl2.ARG_HEIGHT, zpl2.ARG_THICKNESS, zpl2.ARG_COLOR]
+        vals.update(_compute_arg(data[2:], args))
+        return vals
+    return {}
+
+
 def _graphic_field(data):
     if data[:3] == "GFA":
         vals = {}
@@ -304,6 +322,7 @@ def _get_data(data):
 
 SUPPORTED_CODE = {
     "FO": {"method": _field_origin},
+    "FT": {"method": _field_typeset},
     "FD": {"method": _get_data},
     "A": {"method": _font_format},
     "FB": {"method": _field_block},
@@ -336,6 +355,7 @@ SUPPORTED_CODE = {
     "FR": {"method": _field_reverse_print},
     "GB": {"method": _graphic_box},
     "GC": {"method": _graphic_circle},
+    "GE": {"method": _graphic_ellipse},
     "GFA": {"method": _graphic_field},
 }
 
