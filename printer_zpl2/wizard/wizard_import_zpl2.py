@@ -6,14 +6,56 @@ import binascii
 import io
 import logging
 import re
+import zlib
 
 from PIL import Image, ImageOps
 
 from odoo import _, fields, models
+from odoo.exceptions import UserError
 
 from ..models import zpl2
+from ctypes import c_ushort
 
 _logger = logging.getLogger(__name__)
+
+CRC_CCITT_TABLE = None
+
+
+def _calculate_crc_ccitt(data):
+    """
+    All CRC stuff ripped from PyCRC, GPLv3 licensed
+    """
+    global CRC_CCITT_TABLE
+    if not CRC_CCITT_TABLE:
+        crc_ccitt_table = []
+        for i in range(0, 256):
+            crc = 0
+            c = i << 8
+
+            for j in range(0, 8):
+                if (crc ^ c) & 0x8000:
+                    crc = c_ushort(crc << 1).value ^ 0x1021
+                else:
+                    crc = c_ushort(crc << 1).value
+
+                c = c_ushort(c << 1).value
+
+            crc_ccitt_table.append(crc)
+            CRC_CCITT_TABLE = crc_ccitt_table
+
+    is_string = isinstance(data, str)
+    crc_value = 0x0000  # XModem version
+
+    for c in data:
+        d = ord(c) if is_string else c
+        tmp = ((crc_value >> 8) & 0xff) ^ d
+        crc_value = ((crc_value << 8) & 0xff00) ^ CRC_CCITT_TABLE[tmp]
+
+    return crc_value
+
+
+def calc_crc(data):
+    return '%04X' % _calculate_crc_ccitt(data)
 
 
 def _compute_arg(data, arg):
@@ -38,6 +80,13 @@ def _field_typeset(data):
         vals["coords_type"] = "FT"
         return vals
     return {}
+
+
+def _replace_special_zpl_characters(zpl_string):
+    # Reemplaza los caracteres especiales usando el mapeo
+    for code, char in zpl2.SPECIAL_CHARS_MAPPING.items():
+        zpl_string = zpl_string.replace(code, char)
+    return zpl_string
 
 
 def _font_format(data):
@@ -291,9 +340,26 @@ def _graphic_field(data):
         ]
         vals.update(_compute_arg(data[3:], args))
 
-        # Image
-        rawData = re.sub("[^A-F0-9]+", "", vals["ascii_data"])
-        rawData = binascii.unhexlify(rawData)
+        if vals["ascii_data"].startswith(":Z64") or vals["ascii_data"].startswith(":B64"):
+            zlib_compressed = vals["ascii_data"].startswith(":Z64")
+            crc = vals["ascii_data"][-4:]
+            rawData = vals["ascii_data"][5:-5]  # Extraer los datos de ASCII
+
+            # Validar CRC
+            crc_calculated = calc_crc(rawData.encode('ascii'))
+            if crc != crc_calculated:
+                raise UserError("CRC mismatch.")
+
+            # Decodificar Base64
+            rawData = base64.b64decode(rawData)
+
+            # Descomprimir LZ77/Zlib
+            if zlib_compressed:
+                rawData = zlib.decompress(rawData)
+        else:
+            # Image
+            rawData = re.sub("[^A-F0-9]+", "", vals["ascii_data"])
+            rawData = binascii.unhexlify(rawData)
 
         width = int(float(vals["bytes_per_row"]) * 8)
         height = int(float(vals["total_bytes"]) / width) * 8
@@ -378,6 +444,29 @@ class WizardImportZPl2(models.TransientModel):
             return max(sequences) + 1
         return 0
 
+    def split_zpl_commands(self, zpl_data):
+        lines = zpl_data.splitlines()
+
+        commands = []  # commands list
+        current_command = ""
+
+        for line in lines:
+            line = line.strip()
+
+            if line:  # if not white line
+                if line.startswith('^'):  # command line
+                    if current_command:
+                        commands.append(current_command.strip())
+                    current_command = line
+                else:
+                    current_command += line
+
+        # Last commanda if exists
+        if current_command:
+            commands.append(current_command.strip())
+
+        return commands
+
     def import_zpl2(self):
         self.ensure_one()
         Zpl2Component = self.env["printing.label.zpl2.component"]
@@ -387,9 +476,11 @@ class WizardImportZPl2(models.TransientModel):
 
         sequence = self._start_sequence()
         default = {}
+        commands = self.split_zpl_commands(self.data)
 
-        for i, line in enumerate(self.data.split("\n")):
+        for i, line in enumerate(commands):
             vals = {}
+            line = _replace_special_zpl_characters(line)
 
             args = line.split("^")
             for arg in args:
