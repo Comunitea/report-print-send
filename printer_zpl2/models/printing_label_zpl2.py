@@ -49,6 +49,11 @@ class PrintingLabelZpl2(models.Model):
         default=480,
         help="Width of the label, will be set on the printer before printing.",
     )
+    length = fields.Integer(
+        required=True,
+        default=640,
+        help="Length of the label, will be set on the printer before printing.",
+    )
     component_ids = fields.One2many(
         comodel_name="printing.label.zpl2.component",
         inverse_name="label_id",
@@ -372,6 +377,7 @@ class PrintingLabelZpl2(models.Model):
             label_data.label_start()
             if not labelary_emul:
                 label_data.print_width(self.width)
+                label_data.print_length(self.length)
             label_data.label_encoding()
 
             label_data.label_home(self.origin_x, self.origin_y)

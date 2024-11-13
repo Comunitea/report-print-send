@@ -177,6 +177,10 @@ class Zpl2(object):
         """Defines the print width setting on the printer"""
         self._write_command("^PW%d" % label_width)
 
+    def print_length(self, label_lenght):
+        """Defines the print lenght setting on the printer"""
+        self._write_command("^LL%d" % label_lenght)
+
     def configuration_update(self, active_configuration):
         """Set the active configuration on the printer"""
         self._write_command("^JU%s" % active_configuration)

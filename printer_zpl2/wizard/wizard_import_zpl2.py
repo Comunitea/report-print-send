@@ -484,6 +484,18 @@ class WizardImportZPl2(models.TransientModel):
 
             args = line.split("^")
             for arg in args:
+                if arg[:2] == "FW":
+                    self.label_id.width = int(arg[2:])
+                    break
+                elif arg[:2] == "LL":
+                    self.label_id.length = int(arg[2:])
+                    break
+                elif arg[:2] == "LH":
+                    origin_x, origin_y = arg[2:].split(',')
+                    self.label_id.origin_x = int(origin_x)
+                    self.label_id.origin_y = int(origin_y)
+                    break
+
                 for _key, code in SUPPORTED_CODE.items():
                     component_arg = code["method"](arg)
                     if component_arg:

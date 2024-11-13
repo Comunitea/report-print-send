@@ -54,6 +54,7 @@
                         <field name="model_id" />
                         <field name="description" />
                         <field name="width" />
+                        <field name="length" />
                         <field name="origin_x" />
                         <field name="origin_y" />
                         <field name="restore_saved_config" />
