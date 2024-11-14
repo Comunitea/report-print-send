@@ -129,6 +129,7 @@ SPECIAL_CHARS_MAPPING = {
     "\\AE": "®",
     "\\AA": "ª",
     "\\BA": "º",
+    "\\A7": "º"
 }
 
 
