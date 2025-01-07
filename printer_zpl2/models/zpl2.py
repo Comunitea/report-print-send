@@ -190,6 +190,10 @@ class Zpl2(object):
         """Adds the label start command to the buffer"""
         self._write_command("^XA")
 
+    def printing_mode(self, mode):
+        """Define the printing mode on the printer"""
+        self._write_command("^MT%s^JUS" % mode)
+
     def label_encoding(self):
         """Adds the label encoding command to the buffer
         Fixed value defined to UTF-8

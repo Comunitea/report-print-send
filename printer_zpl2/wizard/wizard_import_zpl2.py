@@ -495,6 +495,9 @@ class WizardImportZPl2(models.TransientModel):
                     self.label_id.origin_x = int(origin_x)
                     self.label_id.origin_y = int(origin_y)
                     break
+                elif arg[:2] == "MT":
+                    self.label_id.printing_mode = arg[2:].upper()
+                    break
 
                 for _key, code in SUPPORTED_CODE.items():
                     component_arg = code["method"](arg)

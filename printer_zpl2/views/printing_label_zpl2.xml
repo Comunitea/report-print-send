@@ -58,6 +58,7 @@
                         <field name="origin_x" />
                         <field name="origin_y" />
                         <field name="restore_saved_config" />
+                        <field name="printing_mode"/>
                     </group>
                     <group attrs="{'invisible':[('test_print_mode', '=', False)]}">
                         <button

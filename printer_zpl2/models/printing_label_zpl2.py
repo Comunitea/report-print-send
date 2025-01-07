@@ -92,6 +92,8 @@ class PrintingLabelZpl2(models.Model):
     )
     labelary_width = fields.Float(string="Width in mm", default=140)
     labelary_height = fields.Float(string="Height in mm", default=70)
+    printing_mode = fields.Selection([('D', 'Direct Thermal'), ('T', 'Thermal Transfer')],
+                                     string='Printing Mode', default='D')
 
     @api.constrains("component_ids")
     def check_recursion(self):
@@ -375,6 +377,8 @@ class PrintingLabelZpl2(models.Model):
         for page_number in range(page_count):
             # Initialize printer's configuration
             label_data.label_start()
+            if self.printing_mode:
+                label_data.printing_mode(self.printing_mode)
             if not labelary_emul:
                 label_data.print_width(self.width)
                 label_data.print_length(self.length)
