@@ -91,6 +91,7 @@ def _replace_special_zpl_characters(zpl_string):
 
 def _font_format(data):
     if data[:1] == "A":
+        data = data.replace('A@', 'A0')
         data = data.split(",")
         vals = {}
         if len(data[0]) > 1:
