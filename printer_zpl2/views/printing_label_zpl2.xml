@@ -58,7 +58,10 @@
                         <field name="origin_x" />
                         <field name="origin_y" />
                         <field name="restore_saved_config" />
-                        <field name="printing_mode"/>
+                        <field name="printing_mode" />
+                        <field name="darkness" />
+                        <field name="print_speed" />
+                        <field name="slew_speed" />
                     </group>
                     <group attrs="{'invisible':[('test_print_mode', '=', False)]}">
                         <button

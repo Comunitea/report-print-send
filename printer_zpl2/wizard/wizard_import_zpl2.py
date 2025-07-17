@@ -7,6 +7,7 @@ import io
 import logging
 import re
 import zlib
+from ctypes import c_ushort
 
 from PIL import Image, ImageOps
 
@@ -14,7 +15,6 @@ from odoo import _, fields, models
 from odoo.exceptions import UserError
 
 from ..models import zpl2
-from ctypes import c_ushort
 
 _logger = logging.getLogger(__name__)
 
@@ -48,14 +48,14 @@ def _calculate_crc_ccitt(data):
 
     for c in data:
         d = ord(c) if is_string else c
-        tmp = ((crc_value >> 8) & 0xff) ^ d
-        crc_value = ((crc_value << 8) & 0xff00) ^ CRC_CCITT_TABLE[tmp]
+        tmp = ((crc_value >> 8) & 0xFF) ^ d
+        crc_value = ((crc_value << 8) & 0xFF00) ^ CRC_CCITT_TABLE[tmp]
 
     return crc_value
 
 
 def calc_crc(data):
-    return '%04X' % _calculate_crc_ccitt(data)
+    return "%04X" % _calculate_crc_ccitt(data)
 
 
 def _compute_arg(data, arg):
@@ -91,7 +91,7 @@ def _replace_special_zpl_characters(zpl_string):
 
 def _font_format(data):
     if data[:1] == "A":
-        data = data.replace('A@', 'A0')
+        data = data.replace("A@", "A0")
         data = data.split(",")
         vals = {}
         if len(data[0]) > 1:
@@ -341,13 +341,15 @@ def _graphic_field(data):
         ]
         vals.update(_compute_arg(data[3:], args))
 
-        if vals["ascii_data"].startswith(":Z64") or vals["ascii_data"].startswith(":B64"):
+        if vals["ascii_data"].startswith(":Z64") or vals["ascii_data"].startswith(
+            ":B64"
+        ):
             zlib_compressed = vals["ascii_data"].startswith(":Z64")
             crc = vals["ascii_data"][-4:]
             rawData = vals["ascii_data"][5:-5]  # Extraer los datos de ASCII
 
             # Validar CRC
-            crc_calculated = calc_crc(rawData.encode('ascii'))
+            crc_calculated = calc_crc(rawData.encode("ascii"))
             if crc != crc_calculated:
                 raise UserError("CRC mismatch.")
 
@@ -455,7 +457,7 @@ class WizardImportZPl2(models.TransientModel):
             line = line.strip()
 
             if line:  # if not white line
-                if line.startswith('^'):  # command line
+                if line.startswith("^") or line.startswith("~"):  # command line
                     if current_command:
                         commands.append(current_command.strip())
                     current_command = line
@@ -482,8 +484,9 @@ class WizardImportZPl2(models.TransientModel):
         for i, line in enumerate(commands):
             vals = {}
             line = _replace_special_zpl_characters(line)
-
             args = line.split("^")
+            if len(args) == 1:
+                args = line.split("~")
             for arg in args:
                 if arg[:2] == "FW":
                     self.label_id.width = int(arg[2:])
@@ -492,12 +495,20 @@ class WizardImportZPl2(models.TransientModel):
                     self.label_id.length = int(arg[2:])
                     break
                 elif arg[:2] == "LH":
-                    origin_x, origin_y = arg[2:].split(',')
+                    origin_x, origin_y = arg[2:].split(",")
                     self.label_id.origin_x = int(origin_x)
                     self.label_id.origin_y = int(origin_y)
                     break
                 elif arg[:2] == "MT":
                     self.label_id.printing_mode = arg[2:].upper()
+                    break
+                elif arg[:2] == "SD":
+                    self.label_id.darkness = int(arg[2:])
+                    break
+                elif arg[:2] == "PR":
+                    print_speed, slew_speed = arg[2:].split(",")
+                    self.label_id.print_speed = int(print_speed)
+                    self.label_id.slew_speed = int(slew_speed)
                     break
 
                 for _key, code in SUPPORTED_CODE.items():

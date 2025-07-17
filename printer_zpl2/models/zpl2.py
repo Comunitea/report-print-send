@@ -129,7 +129,7 @@ SPECIAL_CHARS_MAPPING = {
     "\\AE": "®",
     "\\AA": "ª",
     "\\BA": "º",
-    "\\A7": "º"
+    "\\A7": "º",
 }
 
 
@@ -199,6 +199,14 @@ class Zpl2(object):
         Fixed value defined to UTF-8
         """
         self._write_command("^CI28")
+
+    def label_darkness(self, darkness):
+        """Define the darkness level for the label printer"""
+        self._write_command("~SD{:02d}".format(darkness))
+
+    def label_print_rate(self, print_speed, slew_speed):
+        """Define the print rate for the label printer"""
+        self._write_command("^PR{:d},{:d}".format(print_speed, slew_speed))
 
     def label_end(self):
         """Adds the label start command to the buffer"""

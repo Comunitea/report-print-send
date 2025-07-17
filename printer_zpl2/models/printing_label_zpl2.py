@@ -92,8 +92,38 @@ class PrintingLabelZpl2(models.Model):
     )
     labelary_width = fields.Float(string="Width in mm", default=140)
     labelary_height = fields.Float(string="Height in mm", default=70)
-    printing_mode = fields.Selection([('D', 'Direct Thermal'), ('T', 'Thermal Transfer')],
-                                     string='Printing Mode', default='D')
+    printing_mode = fields.Selection(
+        [("D", "Direct Thermal"), ("T", "Thermal Transfer")],
+        string="Printing Mode",
+        default="D",
+    )
+    darkness = fields.Integer(
+        "Darkness", default=10, help="Darkness level for the label printer, 0 to 30"
+    )
+    print_speed = fields.Integer(
+        "Print Speed",
+        default=2,
+        help="Print speed for the label printer, in inches per second, 1 to 14",
+    )
+    slew_speed = fields.Integer(
+        "Slew Speed",
+        default=6,
+        help="Slew speed for the label printer, in inches per second, 2 to 14",
+    )
+
+    @api.constrains("slew_speed", "print_speed")
+    def _check_print_rate(self):
+        for record in self:
+            if record.slew_speed < 2 or record.slew_speed > 14:
+                raise ValidationError(_("Slew Speed must be between 2 and 14."))
+            if record.print_speed < 1 or record.print_speed > 14:
+                raise ValidationError(_("Print Speed must be between 1 and 14."))
+
+    @api.constrains("darkness")
+    def _check_darkness(self):
+        for record in self:
+            if record.darkness < 0 or record.darkness > 30:
+                raise ValidationError(_("Darkness must be between 0 and 30."))
 
     @api.constrains("component_ids")
     def check_recursion(self):
@@ -379,6 +409,9 @@ class PrintingLabelZpl2(models.Model):
             label_data.label_start()
             if self.printing_mode:
                 label_data.printing_mode(self.printing_mode)
+            label_data.label_darkness(self.darkness)
+            if self.print_speed and self.slew_speed:
+                label_data.label_print_rate(self.print_speed, self.slew_speed)
             if not labelary_emul:
                 label_data.print_width(self.width)
                 label_data.print_length(self.length)
